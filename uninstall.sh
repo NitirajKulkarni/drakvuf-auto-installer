@@ -32,4 +32,11 @@ ip link delete dev xenbr0 2>/dev/null || true
 echo "[*] Cleaning state..."
 rm -f "${SCRIPT_DIR}/state/state.json"
 
+echo "[*] Restoring bootloader configuration..."
+rm -f /etc/dracut.conf.d/xen.conf
+if [[ -f /etc/default/grub.d/xen.cfg ]]; then
+    rm -f /etc/default/grub.d/xen.cfg
+fi
+update-grub 2>/dev/null || true
+
 echo "[+] DRAKVUF Sandbox uninstalled successfully."

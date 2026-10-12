@@ -182,11 +182,55 @@ sudo ./diagnose.sh
 # Automatically repair Xen modules, library caches, or service state
 sudo ./repair.sh
 
+# Revert bootloader default to standard Ubuntu if needed
+sudo ./repair.sh --restore-ubuntu-boot
+
+# Re-enable Xen Hypervisor as default boot entry
+sudo ./repair.sh --enable-xen-boot
+
 # Reset deployment state and re-provision from scratch
 sudo ./clean-install.sh
 
 # Gracefully teardown services, bridges, and configurations
 sudo ./uninstall.sh
+```
+
+---
+
+## 🛡️ Host Integrity, Zero Data-Loss Guarantee & Safe Recovery
+
+This deployment suite adheres to strict safety principles: **it never touches personal partitions, modifies existing user files, or reformats storage drives.**
+
+### Understanding Microkernel Dual-Boot Architecture
+1. Phase 1 registers the Xen Hypervisor microkernel alongside your existing Linux kernel in GRUB.
+2. All regular Linux kernels remain fully installed and accessible under **"Advanced options for Ubuntu"**.
+3. Modern Ubuntu releases (24.04 / 26.04) utilize **Dracut** for early-stage initramfs generation. If Dracut's host-only configuration encounters missing storage drivers when booting under Xen Dom0 (e.g., `dracut-initqueue: timeout`), **your host system and data are 100% intact**.
+
+### Emergency Recovery (Bypassing Xen)
+If your machine ever pauses or halts during Xen Dom0 boot:
+1. Power cycle or reboot your system.
+2. When the GRUB menu appears, select:
+   ```text
+   Advanced options for Ubuntu
+     └── Ubuntu, with Linux <kernel-version>-generic   <-- (Select normal Linux kernel)
+   ```
+3. Your machine boots cleanly into standard Ubuntu with complete desktop and data access.
+4. Open a terminal and run the automated repair utility:
+   ```bash
+   cd drakvuf-auto-installer
+   git pull
+   sudo ./repair.sh
+   ```
+   *This automatically creates `/etc/dracut.conf.d/xen.conf`, injects `xen-blkfront`, `nvme`, and `ahci` storage controller modules, and regenerates ramdisk images.*
+
+### Switching Default Bootloader Entry
+You can toggle your default boot entry at any time:
+```bash
+# Revert default boot to standard Ubuntu Linux
+sudo ./repair.sh --restore-ubuntu-boot
+
+# Re-enable Xen Hypervisor as default boot entry
+sudo ./repair.sh --enable-xen-boot
 ```
 
 ---
