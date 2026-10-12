@@ -56,6 +56,8 @@ def execute_phase_1(config: DrakvufAutoConfig, state: StateManager, project_root
     if not state.is_step_completed(phase_name, step_pkg):
         state.start_step(phase_name, step_pkg)
         logger.info("Installing Xen toolchain and virtualization libraries...")
+        import platform
+        curr_kernel = platform.release()
         pkgs = [
             "wget", "curl", "git", "build-essential", "make", "gcc", "clang",
             "bridge-utils", "iproute2", "libssl-dev", "bison", "flex",
@@ -64,6 +66,8 @@ def execute_phase_1(config: DrakvufAutoConfig, state: StateManager, project_root
         ]
         run_command(["apt-get", "update", "-y"], stream=False)
         run_command(["apt-get", "install", "-y"] + pkgs, stream=True)
+        # Ensure extra kernel modules (virtualization, Xen, and storage controllers) are available
+        run_command(["apt-get", "install", "-y", f"linux-modules-extra-{curr_kernel}"], stream=True, check=False)
         state.complete_step(phase_name, step_pkg)
 
     # Step 2: Install Xen Hypervisor packages
@@ -159,7 +163,7 @@ def execute_phase_1(config: DrakvufAutoConfig, state: StateManager, project_root
                  f"/boot/initrd.img-{curr_kernel}", curr_kernel],
                 stream=True, check=False
             )
-        elif command_exists("update-initramfs"):
+        if command_exists("update-initramfs"):
             logger.info(f"Regenerating initramfs for kernel {curr_kernel}...")
             run_command(["update-initramfs", "-u", "-k", curr_kernel], stream=True, check=False)
 

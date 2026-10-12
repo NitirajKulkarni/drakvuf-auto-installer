@@ -204,15 +204,19 @@ This deployment suite adheres to strict safety principles: **it never touches pe
 ### Understanding Microkernel Dual-Boot Architecture
 1. Phase 1 registers the Xen Hypervisor microkernel alongside your existing Linux kernel in GRUB.
 2. All regular Linux kernels remain fully installed and accessible under **"Advanced options for Ubuntu"**.
-3. Modern Ubuntu releases (24.04 / 26.04) utilize **Dracut** for early-stage initramfs generation. If Dracut's host-only configuration encounters missing storage drivers when booting under Xen Dom0 (e.g., `dracut-initqueue: timeout`), **your host system and data are 100% intact**.
+3. **Storage Controller & Virtualization Agnostic:** Modern Linux distributions (Ubuntu 22.04 / 24.04 / 26.04) utilize **Dracut** or **initramfs-tools**. The installer automatically synthesizes early-boot drivers for:
+   - **Bare-metal NVMe & AHCI SATA** controllers (`nvme`, `ahci`, `sd_mod`, `scsi_mod`)
+   - **Nested Virtualization SCSI controllers** for VMware (`vmw_pvscsi`, `mptspi`, `mptsas`) and VirtualBox/KVM (`virtio_blk`, `virtio_pci`, `virtio_scsi`)
+   - **Xen Microkernel Frontend drivers** (`xen-blkfront`, `xen-netfront`, `xen-privcmd`, `xen-evtchn`, `xen-gntdev`)
+4. Because the standard Linux kernel is completely untouched, **your host system, personal files, and operating system remain 100% intact**.
 
 ### Emergency Recovery (Bypassing Xen)
-If your machine ever pauses or halts during Xen Dom0 boot:
+If your machine ever pauses or halts during early boot:
 1. Power cycle or reboot your system.
-2. When the GRUB menu appears, select:
+2. When the GRUB menu appears (tap `Esc` or hold `Shift` during BIOS/UEFI splash), select:
    ```text
    Advanced options for Ubuntu
-     └── Ubuntu, with Linux <kernel-version>-generic   <-- (Select normal Linux kernel)
+     └── Ubuntu, with Linux <kernel-version>-generic   <-- (Select regular Ubuntu Linux kernel)
    ```
 3. Your machine boots cleanly into standard Ubuntu with complete desktop and data access.
 4. Open a terminal and run the automated repair utility:
@@ -221,7 +225,7 @@ If your machine ever pauses or halts during Xen Dom0 boot:
    git pull
    sudo ./repair.sh
    ```
-   *This automatically creates `/etc/dracut.conf.d/xen.conf`, injects `xen-blkfront`, `nvme`, and `ahci` storage controller modules, and regenerates ramdisk images.*
+   *This automatically verifies `/etc/dracut.conf.d/xen.conf`, injects storage controller modules for your active kernel, and regenerates ramdisk images.*
 
 ### Switching Default Bootloader Entry
 You can toggle your default boot entry at any time:
