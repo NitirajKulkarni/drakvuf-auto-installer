@@ -1,0 +1,12 @@
+[Unit]
+Description=DRAKVUF Sandbox Auto-Installer Post-Reboot Resume Unit
+After=multi-user.target xencommons.service
+
+[Service]
+Type=oneshot
+User=root
+ExecStart=/bin/bash /opt/drakvuf-auto-installer/install.sh --resume
+RemainAfterExit=yes
+
+[Install]
+WantedBy=multi-user.target

@@ -1,0 +1,14 @@
+[Unit]
+Description=DRAKVUF Sandbox Core Orchestrator
+After=network.target redis-server.service xencommons.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/drakvuf-sandbox
+ExecStart=/usr/bin/python3 -m drakcore.main
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target

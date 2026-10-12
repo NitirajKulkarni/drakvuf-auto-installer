@@ -1,0 +1,14 @@
+[Unit]
+Description=DRAKVUF Sandbox Web Interface
+After=network.target redis-server.service
+
+[Service]
+Type=simple
+User=root
+WorkingDirectory=/opt/drakvuf-sandbox
+ExecStart=/usr/bin/python3 -m drakweb.run --bind 127.0.0.1 --port 6300
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
