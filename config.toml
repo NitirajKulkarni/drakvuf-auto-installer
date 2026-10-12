@@ -1,0 +1,96 @@
+# DRAKVUF Sandbox Automated Installer Configuration
+# ====================================================
+# Author: Nitiraj Kulkarni
+# Edit values below before running: sudo ./install.sh
+# All settings have secure, deterministic defaults.
+
+[installation]
+# Directory where DRAKVUF engine and LibVMI will be cloned/compiled
+drakvuf_root = "/opt/drakvuf"
+# Directory where DRAKVUF Sandbox orchestration is installed
+drakvuf_sandbox_root = "/opt/drakvuf-sandbox"
+# Run without interactive prompts (deterministic headless installation)
+non_interactive = true
+# Automatically attempt repairs on common failures (OVMF patch, symbol fetch retry)
+auto_repair = true
+# Maximum repair attempts per phase
+max_repair_attempts = 3
+
+[hardware]
+# Minimum required physical host RAM in GB
+min_ram_gb = 8
+# RAM pinned specifically to Xen Dom0 (management Linux OS)
+dom0_memory_mb = 4096
+# Maximum vCPUs pinned to Dom0
+dom0_max_vcpus = 2
+# Strictly enforce Intel VT-x with EPT (Extended Page Tables)
+force_intel_ept = true
+
+[xen]
+# Xen hypervisor version to deploy
+version = "4.19.2"
+# Xen official release archive
+source_url = "https://downloads.xenproject.org/release/xen/4.19.2/xen-4.19.2.tar.gz"
+# GRUB boot parameters required by DRAKVUF VMI & Altp2m shadow paging
+grub_cmdline = "dom0_mem=4096M,max:4096M dom0_max_vcpus=2 dom0_vcpus_pin=1 force-ept=1 ept=ad=0 hap_1gb=0 hap_2mb=0 altp2m=1 hpet=legacy-replacement smt=0 spec-ctrl=gds-mit=no"
+# Allow installer to automatically reboot host into Xen Dom0 (resumes automatically via systemd)
+allow_auto_reboot = true
+
+[drakvuf]
+# Tamas K Lengyel's DRAKVUF engine repository
+repo = "https://github.com/tklengyel/drakvuf.git"
+# CERT Polska's DRAKVUF Sandbox repository
+sandbox_repo = "https://github.com/CERT-Polska/drakvuf-sandbox.git"
+# Preferred installation mode: "source" (compile latest patched engine) or "prebuilt"
+install_mode = "source"
+
+[guest]
+# Virtual machine name in Xen xl domain management
+name = "win10-drakvuf"
+# Windows Edition: "win10_eval" (Windows 10 Enterprise Evaluation 22H2 recommended)
+windows_edition = "win10_eval"
+# Automatically download official Microsoft Enterprise Evaluation ISO if iso_path is empty
+auto_download_iso = true
+# Custom path to local Windows ISO (leave empty if using auto_download_iso)
+iso_path = ""
+# Evaluation ISO direct mirror URL (leave empty to use Microsoft CDN)
+eval_iso_url = ""
+# Guest disk image location
+disk_path = "/var/lib/drakvuf/images/win10.img"
+# Disk size in GB
+disk_size_gb = 40
+# Guest memory in MB
+memory_mb = 4096
+# Virtual CPUs allocated to guest analysis VM
+vcpus = 2
+# Unattended automated installation enabled
+unattended = true
+# VNC server bind port for optional visual inspection (localhost only)
+vnc_port = 5900
+
+[network]
+# Xen network bridge interface
+bridge = "xenbr0"
+# Analysis network subnet (isolated from host LAN)
+subnet = "192.168.100.0/24"
+# Host gateway IP on analysis network
+gateway = "192.168.100.1"
+# DHCP address pool for guest VMs
+dhcp_start = "192.168.100.100"
+dhcp_end = "192.168.100.200"
+
+[services]
+# DrakWeb Web UI binding
+web_bind = "127.0.0.1"
+web_port = 6300
+# Redis task queue port
+redis_port = 6379
+# MinIO S3 object storage ports
+minio_port = 9000
+minio_console_port = 9001
+
+[symbols]
+# Microsoft Public Symbol Server URL for automated PDB retrieval
+symbol_server_url = "https://msdl.microsoft.com/download/symbols"
+# Target directory for LibVMI JSON profiles
+profile_dir = "/etc/libvmi"

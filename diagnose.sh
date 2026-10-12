@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+set -euo pipefail
+
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+cd "${SCRIPT_DIR}"
+
+if [[ $EUID -ne 0 ]]; then
+    echo "[-] Error: Run diagnostics as root (sudo ./diagnose.sh)" >&2
+    exit 1
+fi
+
+export PYTHONPATH="${SCRIPT_DIR}/src:${PYTHONPATH:-}"
+VENV_PYTHON="${SCRIPT_DIR}/.venv/bin/python3"
+if [[ -x "${VENV_PYTHON}" ]]; then
+    exec "${VENV_PYTHON}" -m drakvuf_auto.cli diagnose "$@"
+else
+    exec python3 -m drakvuf_auto.cli diagnose "$@"
+fi

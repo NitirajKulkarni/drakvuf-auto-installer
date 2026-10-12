@@ -1,0 +1,7 @@
+--- a/Config.mk
++++ b/Config.mk
+@@ -250,2 +250,2 @@
+-OVMF_UPSTREAM_URL ?= https://xenbits.xen.org/git-http/ovmf.git
+-OVMF_UPSTREAM_REVISION ?= ba91d0292e593df8528b66f99c1b0b14fadc8e16
++OVMF_UPSTREAM_URL ?= https://github.com/tianocore/edk2.git
++OVMF_UPSTREAM_REVISION ?= 4dfdca63a93497203f197ec98ba20e2327e4afe4
