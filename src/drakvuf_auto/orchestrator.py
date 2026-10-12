@@ -45,12 +45,12 @@ class DrakvufOrchestrator:
             execute_phase_0(self.config, self.state, self.project_root)
 
             # Phase 1: Xen Hypervisor installation & GRUB setup
-            # If reboot was pending or this is a resume after reboot, skip to Phase 2
-            if not self.state.state.reboot_completed:
-                if not self.state.is_phase_completed("phase_1_xen_install"):
-                    execute_phase_1(self.config, self.state, self.project_root)
+            if not self.state.is_phase_completed("phase_1_xen_install"):
+                execute_phase_1(self.config, self.state, self.project_root)
+                return
 
-                # Phase 2: Post-reboot handshake
+            # Phase 2: Post-reboot handshake (executed after host boots into Xen Dom0)
+            if not self.state.state.reboot_completed:
                 execute_phase_2(self.config, self.state, self.project_root)
 
             # Phase 3: DRAKVUF Engine & LibVMI

@@ -129,13 +129,16 @@ def execute_phase_1(config: DrakvufAutoConfig, state: StateManager, project_root
 
     state.set_reboot_pending(True)
     state.complete_phase(phase_name)
-    logger.info("[bold yellow]Phase 1 Complete: Host is configured for Xen Hypervisor.[/bold yellow]")
+    logger.info("[bold yellow]✓ Phase 1 Complete: Host is configured for Xen Hypervisor.[/bold yellow]")
     logger.info("[bold red]REBOOT REQUIRED: Host must now reboot into the Xen microkernel (Dom0).[/bold red]")
 
     if config.xen.allow_auto_reboot:
-        logger.info("[bold cyan]Auto-reboot enabled. Initiating system reboot in 5 seconds...[/bold cyan]")
-        run_command(["sleep", "5"], stream=False, check=False)
-        run_command(["reboot"], stream=False, check=False)
+        logger.info("[bold cyan]Auto-reboot enabled. Initiating system reboot in 3 seconds...[/bold cyan]")
+        run_command(["sleep", "3"], stream=False, check=False)
+        run_command(["systemctl", "reboot"], stream=False, check=False)
+        raise RebootRequiredError(
+            "Host system is rebooting into Xen Dom0. Upon reboot, the installer will automatically resume from Phase 2."
+        )
     else:
         raise RebootRequiredError(
             "Xen hypervisor installation requires a host reboot into Dom0. "
