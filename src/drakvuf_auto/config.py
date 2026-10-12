@@ -38,10 +38,7 @@ class HardwareConfig(BaseModel):
 class XenConfig(BaseModel):
     version: str = "4.19.2"
     source_url: str = "https://downloads.xenproject.org/release/xen/4.19.2/xen-4.19.2.tar.gz"
-    grub_cmdline: str = (
-        "dom0_mem=4096M,max:4096M dom0_max_vcpus=2 dom0_vcpus_pin=1 force-ept=1 "
-        "ept=ad=0 hap_1gb=0 hap_2mb=0 altp2m=1 hpet=legacy-replacement smt=0 spec-ctrl=gds-mit=no"
-    )
+    grub_cmdline: str = "dom0_mem=4096M,max:4096M dom0_max_vcpus=2 altp2m=1"
     allow_auto_reboot: bool = True
 
 

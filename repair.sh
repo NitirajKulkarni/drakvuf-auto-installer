@@ -77,18 +77,37 @@ if [[ -d /etc/initramfs-tools ]]; then
     fi
 fi
 
-# 3. Update GRUB configuration
-echo "[*] Step 3: Updating GRUB bootloader..."
+# 3. Clean and sanitize GRUB commandline parameters for Xen Dom0
+echo "[*] Step 3: Sanitizing GRUB Xen parameters (removing interrupt-breaking flags)..."
+CLEAN_XEN_CMDLINE='GRUB_CMDLINE_XEN_DEFAULT="dom0_mem=4096M,max:4096M dom0_max_vcpus=2 altp2m=1"'
+
+if [[ -f /etc/default/grub ]]; then
+    if grep -q "GRUB_CMDLINE_XEN_DEFAULT=" /etc/default/grub; then
+        sed -i -E "s|^GRUB_CMDLINE_XEN_DEFAULT=.*|${CLEAN_XEN_CMDLINE}|" /etc/default/grub
+    else
+        echo "${CLEAN_XEN_CMDLINE}" >> /etc/default/grub
+    fi
+    # Ensure safe timeout and menu visibility
+    sed -i -E 's/^GRUB_TIMEOUT=.*/GRUB_TIMEOUT=10/' /etc/default/grub || true
+    sed -i -E 's/^GRUB_TIMEOUT_STYLE=.*/GRUB_TIMEOUT_STYLE=menu/' /etc/default/grub || true
+fi
+
+if [[ -f /etc/default/grub.d/xen.cfg ]]; then
+    # Keep xen.cfg aligned with clean cmdline
+    sed -i -E "s|^GRUB_CMDLINE_XEN_DEFAULT=.*|${CLEAN_XEN_CMDLINE}|" /etc/default/grub.d/xen.cfg 2>/dev/null || true
+fi
+
+echo "[*] Step 4: Updating GRUB bootloader..."
 update-grub
 
-# 4. Restart Xen & supporting daemons
-echo "[*] Step 4: Restarting hypervisor and telemetry daemons..."
+# 5. Restart Xen & supporting daemons
+echo "[*] Step 5: Restarting hypervisor and telemetry daemons..."
 systemctl restart xencommons 2>/dev/null || true
 systemctl restart redis-server 2>/dev/null || true
 systemctl restart drakweb 2>/dev/null || true
 
-# 5. Reload dynamic linker cache
-echo "[*] Step 5: Updating shared library cache (LibVMI / LibDRAKVUF)..."
+# 6. Reload dynamic linker cache
+echo "[*] Step 6: Updating shared library cache (LibVMI / LibDRAKVUF)..."
 ldconfig
 
 echo "================================================================="
@@ -96,3 +115,9 @@ echo "[✓] Automated repair completed successfully."
 echo "    - To verify system status: sudo ./diagnose.sh"
 echo "    - If you need to reboot into normal Ubuntu: sudo ./repair.sh --restore-ubuntu-boot"
 echo "================================================================="
+
+if [[ "${MODE}" == "--reboot" ]]; then
+    echo "[*] Initiating automatic system reboot in 3 seconds..."
+    sleep 3
+    systemctl reboot
+fi
